@@ -1,4 +1,4 @@
-- # api_demo — LangGraph + Gemini Demo
+# api_demo — LangGraph + Gemini Demo
 
 This directory contains a minimal **LangGraph + Gemini** conversational agent, showing how to build a tool-using agent locally:
 
@@ -9,11 +9,11 @@ This directory contains a minimal **LangGraph + Gemini** conversational agent, s
 
 1. Install Python and dependencies:
 
-   - Make sure you have **Python 3.11+** installed. You can download it from `https://www.python.org/downloads/`.
-   - Create and activate a virtual environment in the `api_demo` folder (recommended):
+   - Make sure you have **Python 3.10+** installed. You can download it from `https://www.python.org/downloads/`.
+   - Create and activate a virtual environment in the `LangGraph_Agent_Demo_with_API` folder (recommended):
 
    ```bash
-   python3 -m venv .venv          # or `python` if it is 3.11+
+   python3 -m venv .venv          # or `python` if it is 3.10+
    source .venv/bin/activate      # on macOS / Linux
    # On Windows (PowerShell):
    # .venv\Scripts\Activate.ps1
@@ -31,11 +31,11 @@ This directory contains a minimal **LangGraph + Gemini** conversational agent, s
    GEMINI_API_KEY: str = ""  # e.g. "AIzaSyA......"
    ```
 
-   Set the string value to your own Gemini API key (and make sure you do **not** commit the real key to Git).
+   Set the string value to your own Gemini API key.
 
 ## Run the conversational agent
 
-From inside the `api_demo` directory:
+From inside the `LangGraph_Agent_Demo_with_API` directory:
 
 ```bash
 python image_search_agent.py
