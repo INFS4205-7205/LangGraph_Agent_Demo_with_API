@@ -13,7 +13,6 @@ This directory contains a minimal **LangGraph + Gemini** conversational agent, s
    - Create and activate a virtual environment in the `api_demo` folder (recommended):
 
    ```bash
-   cd api_demo
    python3 -m venv .venv          # or `python` if it is 3.11+
    source .venv/bin/activate      # on macOS / Linux
    # On Windows (PowerShell):
