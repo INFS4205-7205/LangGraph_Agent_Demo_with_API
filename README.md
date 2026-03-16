@@ -38,8 +38,6 @@ This directory contains a minimal **LangGraph + Gemini** conversational agent, s
 From inside the `api_demo` directory:
 
 ```bash
-cd api_demo
-pip install -r requirements.txt
 python image_search_agent.py
 ```
 
