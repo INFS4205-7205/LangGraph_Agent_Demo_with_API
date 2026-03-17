@@ -252,7 +252,7 @@ TOOLS = [search_courses, calc, write_text, search_images]
 GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 # Paste your Gemini API key here for local use (do NOT commit real keys to Git)
-GEMINI_API_KEY: str = "AIzaSyCoOmQlXcciTq6nzdoQTOLx2IUgZ1Y-GX8"  # e.g. "AIzaSyA......"
+GEMINI_API_KEY: str = ""  # e.g. "AIzaSyA......"
 
 
 def set_api_key(key: str) -> None:
