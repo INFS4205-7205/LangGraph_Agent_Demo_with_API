@@ -18,7 +18,9 @@ from typing import List, TypedDict
 from urllib3.exceptions import NotOpenSSLWarning
 from PIL import Image
 import chromadb
-from sentence_transformers import SentenceTransformer
+import torch
+import torch.nn.functional as F
+import open_clip
 
 from langchain.tools import tool
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -110,8 +112,8 @@ def write_text(path: str, content: str) -> str:
 
 
 # =========================
-# Image Indexing (CLIP + ChromaDB)
-# Logic mirrors LangGraph_Agent_Demo/local_agent.py
+# Image Indexing (OpenCLIP + ChromaDB)
+# Logic mirrors LangGraph_Agent_Demo/local_agent.py, but embeddings come from open_clip
 # =========================
 
 class ImageIndex:
@@ -128,9 +130,14 @@ class ImageIndex:
             metadata={"hnsw:space": "cosine"},
         )
 
-        # Load CLIP model
-        print("Loading CLIP model (clip-ViT-B-32)...")
-        self.model = SentenceTransformer("clip-ViT-B-32")
+        # Load OpenCLIP model
+        print("Loading OpenCLIP model (ViT-B-32, laion2b_s34b_b79k)...")
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+            "ViT-B-32", pretrained="laion2b_s34b_b79k"
+        )
+        self.model = self.model.to(self.device).eval()
+        self.tokenizer = open_clip.get_tokenizer("ViT-B-32")
 
         self._index_images()
 
@@ -163,7 +170,7 @@ class ImageIndex:
             if file_id not in existing_ids:
                 try:
                     img_path = os.path.join(self.image_dir, f)
-                    image = Image.open(img_path)
+                    image = Image.open(img_path).convert("RGB")
                     new_images.append(image)
                     new_ids.append(file_id)
                     new_metadatas.append({"filename": f})
@@ -172,7 +179,16 @@ class ImageIndex:
 
         if new_images:
             print(f"Embedding and indexing {len(new_images)} new images...")
-            embeddings = self.model.encode(new_images, normalize_embeddings=True)
+            # Use OpenCLIP to encode images
+            with torch.no_grad():
+                image_tensors = [
+                    self.preprocess(img).unsqueeze(0).to(self.device)
+                    for img in new_images
+                ]
+                image_batch = torch.cat(image_tensors, dim=0)
+                emb = self.model.encode_image(image_batch)
+                # emb = F.normalize(emb, dim=-1)
+                embeddings = emb.cpu().numpy()
             self.collection.add(
                 embeddings=embeddings.tolist(),
                 ids=new_ids,
@@ -183,8 +199,12 @@ class ImageIndex:
             print("Index is up to date.")
 
     def search(self, query: str, k: int = 3):
-        # Embed query
-        query_emb = self.model.encode([query], normalize_embeddings=True)
+        # Embed query text with OpenCLIP
+        with torch.no_grad():
+            tokens = self.tokenizer([query]).to(self.device)
+            text_emb = self.model.encode_text(tokens)
+            # text_emb = F.normalize(text_emb, dim=-1)
+            query_emb = text_emb.cpu().numpy()
 
         # Query Chroma
         results = self.collection.query(
@@ -232,7 +252,7 @@ TOOLS = [search_courses, calc, write_text, search_images]
 GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 # Paste your Gemini API key here for local use (do NOT commit real keys to Git)
-GEMINI_API_KEY: str = ""  # e.g. "AIzaSyA......"
+GEMINI_API_KEY: str = "AIzaSyCoOmQlXcciTq6nzdoQTOLx2IUgZ1Y-GX8"  # e.g. "AIzaSyA......"
 
 
 def set_api_key(key: str) -> None:
